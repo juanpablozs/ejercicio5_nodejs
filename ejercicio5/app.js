@@ -15,6 +15,7 @@ const app = express();
 app.locals.title = "Demo Login";
 
 // Socket.IO setup
+const chatHistory = [];
 const server = http.createServer(app);
 const io = socketIO(server);
 
@@ -37,7 +38,7 @@ app.use(sessionMiddleware);
 
 // Middleware to add session to Socket.IO
 io.use((socket, next) => {
-  sessionMiddleware(socket.request, socket.request.res, next);
+  sessionMiddleware(socket.handshake, socket.handshake.res, next);
 });
 
 app.use((req, res, next) => {
@@ -72,10 +73,19 @@ function restricted(req, res, next) {
 io.on('connection', (socket) => {
   console.log('Usuario conectado');
 
-  // Handling chat events
+  // Enviar historial de chat al nuevo usuario
+  socket.emit('chat history', chatHistory);
+
+  // Manejar evento de chat
   socket.on('chat', (data) => {
-    io.emit('chat', { user: data.user, message: data.message });
-    // You can also save the chat message to a database or in-memory storage for history
+      console.log('Mensaje recibido:', data);
+      chatHistory.push(data);
+      io.emit('chat', data);
+  });
+
+  // Manejar desconexión de usuario
+  socket.on('disconnect', () => {
+      console.log('Usuario desconectado');
   });
 });
 
