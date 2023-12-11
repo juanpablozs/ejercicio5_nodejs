@@ -61,7 +61,6 @@ function restricted(req, res, next) {
 }
 
 
-// Chat-related logic
 
 
 // catch 404 and forward to error handler

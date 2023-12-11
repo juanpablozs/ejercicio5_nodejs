@@ -4,7 +4,7 @@ const input = document.getElementById("input");
 const messages = document.getElementById("messages");
 
 
-// Obtén el historial de chat desde el servidor al cargar la página
+
 socket.on("chat history", (history) => {
   history.forEach((data) => {
     const item = document.createElement("li");
@@ -23,13 +23,11 @@ form.addEventListener('submit', function (e) {
     };
     socket.emit("chat", messageData);
 
-    // Agrega el mensaje a la base de datos local del cliente
     const item = document.createElement("li");
     item.textContent = `${messageData.user}: ${messageData.message}`;
     messages.appendChild(item);
     window.scrollTo(0, document.body.scrollHeight);
 
-    // Envía el mensaje a la base de datos en el servidor
     socket.emit("save to database", messageData);
 
     input.value = "";
