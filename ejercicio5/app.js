@@ -3,14 +3,8 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const session = require('express-session');
-const http = require('http');
-const socketIO = require('socket.io');
 const app = express();
-const chatHistory = [];
-const server = http.createServer(app);
-const io = socketIO(server);
-
+const session = require('express-session');
 const indexRouter = require('./routes/index');
 const loginRouter = require('./routes/login');
 const restrictedRouter = require('./routes/restricted');
@@ -20,12 +14,6 @@ app.locals.title = "Demo Login";
 
 
 
-// Middleware for session
-const sessionMiddleware = session({
-  secret: "La frase que querais",
-  resave: false,
-  saveUninitialized: true
-});
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -35,14 +23,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'node_modules')));
-app.use(sessionMiddleware);
+app.use(session({
+  secret: "La frase que querais",
+  resave: false,
+  saveUninitialized: true
+}));
 
-
-// Middleware to add session to Socket.IO
-io.use((socket, next) => {
-  sessionMiddleware(socket.request, socket.request.res, next);
-});
 
 
 app.use((req, res, next) => {
@@ -56,6 +42,7 @@ app.use((req, res, next) => {
   if (error) res.locals.error = `<p>${error}</p>`;
   next();
 });
+
 
 app.use('/', indexRouter);
 app.use('/login', loginRouter);
@@ -75,24 +62,7 @@ function restricted(req, res, next) {
 
 
 // Chat-related logic
-io.on('connection', (socket) => {
-  console.log('Usuario conectado');
 
-  // Enviar historial de chat al nuevo usuario
-  socket.emit('chat history', chatHistory);
-
-  // Manejar evento de chat
-  socket.on('chat', (data) => {
-      console.log('Mensaje recibido:', data);
-      chatHistory.push(data);
-      io.emit('chat', data);
-  });
-
-  // Manejar desconexión de usuario
-  socket.on('disconnect', () => {
-      console.log('Usuario desconectado');
-  });
-});
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

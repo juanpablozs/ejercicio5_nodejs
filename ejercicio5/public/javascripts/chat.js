@@ -1,7 +1,8 @@
+const socket = io();
 const form = document.getElementById("form");
 const input = document.getElementById("input");
 const messages = document.getElementById("messages");
-const socket = io();
+
 
 // Obtén el historial de chat desde el servidor al cargar la página
 socket.on("chat history", (history) => {
