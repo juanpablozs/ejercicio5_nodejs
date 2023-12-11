@@ -6,18 +6,19 @@ const logger = require('morgan');
 const session = require('express-session');
 const http = require('http');
 const socketIO = require('socket.io');
+const app = express();
+const chatHistory = [];
+const server = http.createServer(app);
+const io = socketIO(server);
 
 const indexRouter = require('./routes/index');
 const loginRouter = require('./routes/login');
 const restrictedRouter = require('./routes/restricted');
 
-const app = express();
+
 app.locals.title = "Demo Login";
 
-// Socket.IO setup
-const chatHistory = [];
-const server = http.createServer(app);
-const io = socketIO(server);
+
 
 // Middleware for session
 const sessionMiddleware = session({
@@ -34,12 +35,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'node_modules')));
 app.use(sessionMiddleware);
+
 
 // Middleware to add session to Socket.IO
 io.use((socket, next) => {
-  sessionMiddleware(socket.handshake, socket.handshake.res, next);
+  sessionMiddleware(socket.request, socket.request.res, next);
 });
+
 
 app.use((req, res, next) => {
   const message = req.session.message;
@@ -68,6 +72,7 @@ function restricted(req, res, next) {
     res.redirect("login");
   }
 }
+
 
 // Chat-related logic
 io.on('connection', (socket) => {
